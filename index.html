@@ -11,10 +11,10 @@ main{height:calc(100dvh - 54px);max-width:780px;margin:auto;padding:0 16px;displ
 dialog{width:min(440px,calc(100vw - 28px));border:1px solid #ddd;border-radius:9px;padding:18px}dialog::backdrop{background:#0005}h2{font-size:18px;margin:0 0 16px}.field{display:grid;gap:7px;margin:14px 0}.field label{font-size:14px}.field input[type=password],.field textarea{width:100%;border:1px solid #ddd;border-radius:7px;padding:10px;background:#fff;color:#222}.small{font-size:12px;color:#777}.check{display:flex;align-items:center;gap:8px;font-size:13px}.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
 @media(max-width:500px){header{padding:0 9px;gap:6px;min-height:56px}.brand{font-size:14px}.model-wrap{gap:4px}.model-label{display:none}select{width:34vw;min-width:100px;max-width:145px;font-size:12px;padding:7px 4px}header button{font-size:13px;padding:7px 8px}main{padding:0 11px}#messages{padding-top:16px}}
 </style></head><body>
-<header><span class="brand">Groq AI</span><span class="spacer"></span><div class="model-wrap"><span class="model-label">モデル</span><select id="model" aria-label="モデルを選択"><option value="llama-3.3-70b-versatile">Llama 3.3 · 70B</option></select></div><button id="new" type="button">新規</button><button id="openSettings" type="button">設定</button></header>
+<header><span class="brand">Groq AI</span><span class="spacer"></span><div class="model-wrap"><span class="model-label">モデル</span><select id="model" aria-label="モデルを選択"><option value="openai/gpt-oss-120b">GPT-OSS 120B — 高性能</option><option value="openai/gpt-oss-20b">GPT-OSS 20B — 高速</option><option value="qwen/qwen3.8-27b">Qwen 3.8 27B — 画像対応</option></select></div><button id="new" type="button">新規</button><button id="openSettings" type="button">設定</button></header>
 <main><div id="messages" aria-live="polite"><div class="welcome">メッセージを入力して始めてください。</div></div>
 <div class="composer"><div class="box"><textarea id="prompt" rows="1" placeholder="メッセージを入力…" aria-label="メッセージ"></textarea><button id="stop" type="button" disabled>停止</button><button id="send" class="send" type="button">送信</button></div><div class="note"><span id="status" class="status">準備完了</span> · 個人情報は入力しないでください。AIの回答は間違うことがあります。</div></div></main>
-<dialog id="settings"><form id="form"><h2>設定</h2><div class="field"><label for="key">Groq APIキー</label><input id="key" type="password" autocomplete="off" placeholder="gsk_…"><div class="small">共有端末ではキーを保存せず、使用後に削除してください。</div><label class="check"><input id="remember" type="checkbox">この端末にAPIキーを保存する</label></div><div class="field"><label for="instruction">追加指示（省略可）</label><textarea id="instruction" rows="3" placeholder="例：中学生にもわかる言葉で説明する"></textarea></div><div class="field"><button id="getModels" type="button">モデル一覧を取得</button><div class="small">Groq APIの利用にはAPIキーが必要です。</div></div><div class="actions"><button id="deleteKey" type="button">キーを削除</button><button id="close" type="button">閉じる</button><button type="submit" class="send">保存</button></div></form></dialog>
+<dialog id="settings"><form id="form"><h2>設定</h2><div class="field"><label for="key">Groq APIキー</label><input id="key" type="password" autocomplete="off" placeholder="gsk_…"><div class="small">共有端末ではキーを保存せず、使用後に削除してください。</div><label class="check"><input id="remember" type="checkbox">この端末にAPIキーを保存する</label></div><div class="field"><label for="instruction">追加指示（省略可）</label><textarea id="instruction" rows="3" placeholder="例：中学生にもわかる言葉で説明する"></textarea></div><div class="field"><div class="small">選択肢は現在のGroq公式モデル一覧をもとに設定しています。利用可能なモデルは変更されることがあります。</div><div class="small">Groq APIの利用にはAPIキーが必要です。</div></div><div class="actions"><button id="deleteKey" type="button">キーを削除</button><button id="close" type="button">閉じる</button><button type="submit" class="send">保存</button></div></form></dialog>
 <script>
 (function(){
 'use strict';
@@ -36,20 +36,6 @@ function modelLabel(id){\n var known={'llama-3.3-70b-versatile':'Llama 3.3 · 70
  if(remember&&apiKey){localStorage.setItem('groq-key',apiKey);sessionStorage.removeItem('groq-key-session');}
  else{localStorage.removeItem('groq-key');if(apiKey)sessionStorage.setItem('groq-key-session',apiKey);else sessionStorage.removeItem('groq-key-session');}
  sessionStorage.setItem('groq-instruction',instruction);
-}
-async function getModels(){
- if(!apiKey){status('APIキーが必要です');$('settings').showModal();return;}
- status('取得中…');
- try{
-  var r=await fetch('https://api.groq.com/openai/v1/models',{headers:{Authorization:'Bearer '+apiKey}});
-  if(!r.ok)throw new Error('HTTP '+r.status);
-  var data=await r.json(),list=(data.data||[]).filter(function(x){return x.id;}).sort(function(a,b){return a.id.localeCompare(b.id);});
-  if(!list.length)throw new Error('モデルがありません');
-  var before=$('model').value;$('model').innerHTML='';
-  list.forEach(function(m){var op=document.createElement('option');op.value=m.id;op.textContent=modelLabel(m.id);op.title=m.id;$('model').appendChild(op);});
-  if(list.some(function(m){return m.id===before;}))$('model').value=before;
-  status('準備完了');
- }catch(e){status('取得失敗');alert('モデル一覧を取得できませんでした。APIキーを確認してください。\n'+e.message);}
 }
 async function send(){
  if(busy)return;var text=$('prompt').value.trim();if(!text)return;
@@ -81,8 +67,7 @@ $('new').onclick=function(){if(busy)return;messages=[];render();status('準備�
 $('openSettings').onclick=function(){$('key').value=apiKey;$('remember').checked=remember;$('instruction').value=instruction;$('settings').showModal();};
 $('close').onclick=function(){$('settings').close();};
 $('form').onsubmit=function(e){e.preventDefault();saveSettings();$('settings').close();status(apiKey?'準備完了':'APIキー未設定');};
-$('getModels').onclick=function(){saveSettings();getModels();};
 $('deleteKey').onclick=function(){apiKey='';remember=false;$('key').value='';$('remember').checked=false;localStorage.removeItem('groq-key');sessionStorage.removeItem('groq-key-session');status('APIキーを削除しました');};
-if(apiKey)getModels();
+
 })();
 </script></body></html>
