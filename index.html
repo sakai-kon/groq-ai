@@ -31,7 +31,7 @@ function render(){
  messages.forEach(function(m){var item=document.createElement('section');item.className='message';var role=document.createElement('div');role.className='role';role.textContent=m.role==='user'?'あなた':'Groq AI';var content=document.createElement('div');content.className='content';content.textContent=m.content;item.appendChild(role);item.appendChild(content);el.appendChild(item);});
  el.scrollTop=el.scrollHeight;
 }
-function modelLabel(id){\n var known={'llama-3.3-70b-versatile':'Llama 3.3 · 70B','llama-3.1-8b-instant':'Llama 3.1 · 8B (高速)','llama-4-scout-17b-16e-instruct':'Llama 4 Scout · 17B','llama-4-maverick-17b-128e-instruct':'Llama 4 Maverick · 17B','qwen/qwen3-32b':'Qwen 3 · 32B','deepseek-r1-distill-llama-70b':'DeepSeek R1 · 70B','openai/gpt-oss-20b':'GPT-OSS · 20B','openai/gpt-oss-120b':'GPT-OSS · 120B'};\n if(known[id])return known[id];\n return id.replace(/[-_]/g,' ').replace(/\\b\\w/g,function(x){return x.toUpperCase();});\n}\nfunction saveSettings(){
+function saveSettings(){
  apiKey=$('key').value.trim();remember=$('remember').checked;instruction=$('instruction').value.trim();
  if(remember&&apiKey){localStorage.setItem('groq-key',apiKey);sessionStorage.removeItem('groq-key-session');}
  else{localStorage.removeItem('groq-key');if(apiKey)sessionStorage.setItem('groq-key-session',apiKey);else sessionStorage.removeItem('groq-key-session');}
