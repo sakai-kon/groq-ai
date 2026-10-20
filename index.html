@@ -90,14 +90,21 @@ function renderMarkdown(parent,source){
   }
   var mathOpen=line.match(/^\s*(\$\$|\\\[)/);
   if(mathOpen){
-   var mathDelimiter=mathOpen[1],mathClose=(mathDelimiter.length===2&&mathDelimiter.charAt(0)==='
+   var mathDelimiter=mathOpen[1];
+   var mathClose=mathDelimiter==='$$'?'$$':'\\]';
+   var mathLines=[line];
    var mathClosed=line.slice(mathOpen[0].length).indexOf(mathClose)>=0;
    i++;
    while(!mathClosed&&i<lines.length){
-    var mathLine=lines[i++];mathLines.push(mathLine);
+    var mathLine=lines[i++];
+    mathLines.push(mathLine);
     if(mathLine.indexOf(mathClose)>=0)mathClosed=true;
    }
-   var mathNode=document.createElement('div');mathNode.className='math-block';mathNode.textContent=mathLines.join('\n');parent.appendChild(mathNode);continue;
+   var mathNode=document.createElement('div');
+   mathNode.className='math-block';
+   mathNode.textContent=mathLines.join('\n');
+   parent.appendChild(mathNode);
+   continue;
   }
   var heading=line.match(/^ {0,3}(#{1,6})\s+(.+?)\s*#*\s*$/);
   if(heading){var h=document.createElement('h'+heading[1].length);appendInline(h,heading[2]);parent.appendChild(h);i++;continue;}
@@ -246,172 +253,7 @@ $('prompt').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftK
 $('stop').onclick=function(){if(controller)controller.abort();};
 $('new').onclick=function(){if(busy)return;messages=[];render();status('準備完了');$('prompt').focus();};
 $('themeToggle').onclick=function(){document.body.classList.toggle('dark');var isDark=document.body.classList.contains('dark');try{localStorage.setItem('groq-theme',isDark?'dark':'light');}catch(ignore){}updateThemeButton();};
-function updateThemeButton(){var isDark=document.body.classList.contains('dark');$('themeToggle').textContent=isDark?'黒':'白';$('themeToggle').title=isDark?'黒背景（クリックで白へ）':'白背景（クリックで黒へ');$('themeToggle').setAttribute('aria-label',isDark?'黒テーマ。クリックで白に切替':'白テーマ。クリックで黒に切替');}
-try{document.body.classList.toggle('dark',localStorage.getItem('groq-theme')==='dark');}catch(ignore){}
-updateThemeButton();
-$('openSettings').onclick=function(){$('key').value=apiKey;$('remember').checked=remember;$('instruction').value=instruction;$('settings').showModal();};
-$('close').onclick=function(){$('settings').close();};
-$('form').onsubmit=function(e){e.preventDefault();saveSettings();$('settings').close();status(apiKey?'準備完了':'APIキー未設定');};
-$('deleteKey').onclick=function(){apiKey='';remember=false;$('key').value='';$('remember').checked=false;localStorage.removeItem('groq-key');sessionStorage.removeItem('groq-key-session');status('APIキーを削除しました');};
-
-})();
-</script></body></html>)?mathDelimiter:'\\]',mathLines=[line];
-   var mathClosed=line.slice(mathOpen[0].length).indexOf(mathClose)>=0;
-   i++;
-   while(!mathClosed&&i<lines.length){
-    var mathLine=lines[i++];mathLines.push(mathLine);
-    if(mathLine.indexOf(mathClose)>=0)mathClosed=true;
-   }
-   var mathNode=document.createElement('div');mathNode.className='math-block';mathNode.textContent=mathLines.join('\n');parent.appendChild(mathNode);continue;
-  }
-  var heading=line.match(/^ {0,3}(#{1,6})\s+(.+?)\s*#*\s*$/);
-  if(heading){var h=document.createElement('h'+heading[1].length);appendInline(h,heading[2]);parent.appendChild(h);i++;continue;}
-  if(isRule(line)){parent.appendChild(document.createElement('hr'));i++;continue;}
-  if(isQuote(line)){
-   var quoteLines=[];while(i<lines.length&&isQuote(lines[i]))quoteLines.push(lines[i++].replace(/^ {0,3}>\s?/,'')); 
-   var quote=document.createElement('blockquote');renderMarkdown(quote,quoteLines.join('\n'));parent.appendChild(quote);continue;
-  }
-  if(isTableStart(i)){
-   var headers=splitTableRow(lines[i]);i+=2;
-   var table=document.createElement('table'),thead=document.createElement('thead'),tr=document.createElement('tr');
-   headers.forEach(function(cell){var th=document.createElement('th');appendInline(th,cell);tr.appendChild(th);});
-   thead.appendChild(tr);table.appendChild(thead);
-   var tbody=document.createElement('tbody');
-   while(i<lines.length&&lines[i].includes('|')&&lines[i].trim()&&!startsBlock(i)){
-    var cells=splitTableRow(lines[i]),row=document.createElement('tr');
-    headers.forEach(function(_,index){var td=document.createElement('td');appendInline(td,cells[index]||'');row.appendChild(td);});
-    tbody.appendChild(row);i++;
-   }
-   table.appendChild(tbody);var wrapper=document.createElement('div');wrapper.className='table-wrap';wrapper.appendChild(table);parent.appendChild(wrapper);continue;
-  }
-  var listMatch=line.match(/^ {0,3}([-+*]|\d{1,9}[.)])\s+(.*)$/);
-  if(listMatch){
-   var ordered=/^\d/.test(listMatch[1]),list=document.createElement(ordered?'ol':'ul');
-   while(i<lines.length){var itemMatch=lines[i].match(/^ {0,3}([-+*]|\d{1,9}[.)])\s+(.*)$/);if(!itemMatch||/^\d/.test(itemMatch[1])!==ordered)break;var li=document.createElement('li');appendInline(li,itemMatch[2]);list.appendChild(li);i++;}
-   parent.appendChild(list);continue;
-  }
-  var paragraph=[];while(i<lines.length&&lines[i].trim()&&!startsBlock(i)){paragraph.push(lines[i]);i++;}
-  if(!paragraph.length)paragraph.push(lines[i++]);
-  var p=document.createElement('p');paragraph.forEach(function(part,index){if(index)p.appendChild(document.createElement('br'));appendInline(p,part);});parent.appendChild(p);
- }
-}
-function render(){
- var el=$('messages');
- if(window.MathJax&&window.MathJax.typesetClear){try{window.MathJax.typesetClear([el]);}catch(ignore){}}
- if(!messages.length){el.innerHTML='<div class="welcome">メッセージを入力して始めてください。</div>';return;}
- el.replaceChildren();
- messages.forEach(function(m,index){
-  var item=document.createElement('section');item.className='message';
-  var role=document.createElement('div');role.className='role';role.textContent=m.role==='user'?'あなた':'Groq AI';
-  var content=document.createElement('div');content.className='content md-body';renderMarkdown(content,m.content);
-  item.appendChild(role);item.appendChild(content);
-  if(m.role==='assistant'&&!busy&&m.content){
-   var actions=document.createElement('div');actions.className='message-actions';
-   var copy=document.createElement('button');copy.type='button';copy.textContent='回答をコピー';copy.onclick=function(){copyText(m.content);};
-   var retry=document.createElement('button');retry.type='button';retry.textContent='再生成';retry.onclick=function(){regenerate(index);};
-   actions.appendChild(copy);actions.appendChild(retry);item.appendChild(actions);
-  }
-  el.appendChild(item);
- });
- el.scrollTop=el.scrollHeight;
-}
-function typesetMath(){
- var el=$('messages');
- if(!window.MathJax||typeof window.MathJax.typesetPromise!=='function'){mathTypesetPending=true;return;}
- mathTypesetPending=false;
- try{if(window.MathJax.typesetClear)window.MathJax.typesetClear([el]);}catch(ignore){}
- window.MathJax.typesetPromise([el]).catch(function(){status('数式の表示に失敗しました');});
-}
-var mathTypesetPending=false;
-window.addEventListener('load',function(){if(mathTypesetPending)typesetMath();});
-function copyText(text){
- if(navigator.clipboard&&navigator.clipboard.writeText){
-  navigator.clipboard.writeText(text).then(function(){status('回答をコピーしました');}).catch(function(){fallbackCopy(text);});
- }else fallbackCopy(text);
-}
-function fallbackCopy(text){
- var field=document.createElement('textarea');field.value=text;field.setAttribute('readonly','');field.style.position='fixed';field.style.opacity='0';document.body.appendChild(field);field.select();
- var ok=false;try{ok=document.execCommand('copy');}catch(ignore){}
- field.remove();status(ok?'回答をコピーしました':'コピーできませんでした');
-}
-async function regenerate(index){
- if(busy)return;
- if(!messages[index]||messages[index].role!=='assistant')return;
- var userIndex=index-1;
- while(userIndex>=0&&messages[userIndex].role!=='user')userIndex--;
- if(userIndex<0){status('再生成する質問が見つかりません');return;}
- messages=messages.slice(0,index);
- $('prompt').value='';
- render();
- await send(true);
-}
-function saveSettings(){
- apiKey=$('key').value.trim();remember=$('remember').checked;instruction=$('instruction').value.trim();
- if(remember&&apiKey){localStorage.setItem('groq-key',apiKey);sessionStorage.removeItem('groq-key-session');}
- else{localStorage.removeItem('groq-key');if(apiKey)sessionStorage.setItem('groq-key-session',apiKey);else sessionStorage.removeItem('groq-key-session');}
- sessionStorage.setItem('groq-instruction',instruction);
-}
-async function send(isRegenerate){
- if(busy)return;
- var text='';
- if(isRegenerate){
-  var last=messages[messages.length-1];
-  if(!last||last.role!=='user'){status('再生成する質問が見つかりません');return;}
-  text=last.content;
- }else{
-  text=$('prompt').value.trim();
-  if(!text)return;
- }
- if(!apiKey){$('settings').showModal();status('APIキーを設定してください');return;}
- var webSearch=$('webSearch').checked;
- if(webSearch&&$('model').value!=='openai/gpt-oss-120b'&&$('model').value!=='openai/gpt-oss-20b'){$('model').value='openai/gpt-oss-120b';status('検索対応モデルへ切替');}
- if(!isRegenerate)messages.push({role:'user',content:text});
- $('prompt').value='';
- render();
- busy=true;$('send').disabled=true;$('stop').disabled=false;controller=new AbortController();
- messages.push({role:'assistant',content:''});status(webSearch?'Web検索中…':'生成中…');render();
- try{
-  var system='あなたは親切で正確なAIアシスタントです。日本語で、わかりやすく回答してください。Markdownが適切な場合は見出し・リスト・コード・LaTeX形式の数式を使ってください。'+(instruction?'\n追加指示: '+instruction:'');
-  var context=[{role:'system',content:system}].concat(messages.slice(0,-1).map(function(m){return {role:m.role,content:m.content};}));
-  if(webSearch){
-   var searchResponse=await fetch('https://api.groq.com/openai/v1/chat/completions',{
-    method:'POST',headers:{Authorization:'Bearer '+apiKey,'Content-Type':'application/json'},
-    body:JSON.stringify({model:$('model').value,messages:context,temperature:1,max_completion_tokens:2048,reasoning_effort:'low',stream:false,tool_choice:'required',tools:[{type:'browser_search'}]}),
-    signal:controller.signal
-   });
-   if(!searchResponse.ok)throw new Error('Groq API HTTP '+searchResponse.status+' — '+(await searchResponse.text()).slice(0,350));
-   var searchData=await searchResponse.json();
-   var searchText=searchData.choices&&searchData.choices[0]&&searchData.choices[0].message&&searchData.choices[0].message.content;
-   messages[messages.length-1].content=searchText||'検索結果を取得できませんでした。検索語を変えて再度お試しください。';
-   status('検索完了');
-  }else{
-   var r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{Authorization:'Bearer '+apiKey,'Content-Type':'application/json'},body:JSON.stringify({model:$('model').value||'openai/gpt-oss-120b',messages:context,temperature:0.5,stream:true}),signal:controller.signal});
-   if(!r.ok)throw new Error('Groq API HTTP '+r.status+' — '+(await r.text()).slice(0,250));
-   var reader=r.body.getReader(),decoder=new TextDecoder(),buffer='';
-   while(true){
-    var part=await reader.read();if(part.done)break;
-    buffer+=decoder.decode(part.value,{stream:true});var lines=buffer.split('\n');buffer=lines.pop();
-    for(var i=0;i<lines.length;i++){
-     var line=lines[i].trim();if(line.indexOf('data:')!==0)continue;var chunk=line.slice(5).trim();if(chunk==='[DONE]')continue;
-     try{var obj=JSON.parse(chunk);messages[messages.length-1].content+=(obj.choices&&obj.choices[0]&&obj.choices[0].delta.content)||'';}catch(ignore){}
-    }
-   }
-   status('完了');
-  }
- }catch(e){
-  if(e.name==='AbortError')status('停止しました');
-  else{messages[messages.length-1].content='エラー: '+e.message;status('エラー');}
- }finally{
-  busy=false;controller=null;$('send').disabled=false;$('stop').disabled=true;
-  render();typesetMath();
- }
-}
-$('send').onclick=send;
-$('prompt').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
-$('stop').onclick=function(){if(controller)controller.abort();};
-$('new').onclick=function(){if(busy)return;messages=[];render();status('準備完了');$('prompt').focus();};
-$('themeToggle').onclick=function(){document.body.classList.toggle('dark');var isDark=document.body.classList.contains('dark');try{localStorage.setItem('groq-theme',isDark?'dark':'light');}catch(ignore){}updateThemeButton();};
-function updateThemeButton(){var isDark=document.body.classList.contains('dark');$('themeToggle').textContent=isDark?'黒':'白';$('themeToggle').title=isDark?'黒背景（クリックで白へ）':'白背景（クリックで黒へ');$('themeToggle').setAttribute('aria-label',isDark?'黒テーマ。クリックで白に切替':'白テーマ。クリックで黒に切替');}
+function updateThemeButton(){var isDark=document.body.classList.contains('dark');$('themeToggle').textContent=isDark?'黒':'白';$('themeToggle').title=isDark?'黒テーマ / 白へ切替':'白テーマ / 黒へ切替';$('themeToggle').setAttribute('aria-label',isDark?'黒テーマ 白に切替':'白テーマ 黒に切替');}
 try{document.body.classList.toggle('dark',localStorage.getItem('groq-theme')==='dark');}catch(ignore){}
 updateThemeButton();
 $('openSettings').onclick=function(){$('key').value=apiKey;$('remember').checked=remember;$('instruction').value=instruction;$('settings').showModal();};
