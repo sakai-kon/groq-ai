@@ -30,7 +30,24 @@ header{min-height:58px;border-bottom:1px solid var(--line);display:flex;align-it
 .brand{font-weight:650;white-space:nowrap}.spacer{flex:1}
 .model-wrap{display:flex;align-items:center;gap:7px;min-width:0}.model-label{font-size:12px;color:var(--muted);white-space:nowrap}
 select{width:min(330px,43vw);min-width:130px;padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:var(--input);color:var(--text);font-size:13px;font-weight:500}
-main{height:calc(100dvh - 58px);max-width:800px;margin:auto;padding:0 16px;display:flex;flex-direction:column}
+.sidebar-toggle{display:none}
+.layout{height:calc(100dvh - 58px);display:flex;min-height:0}
+.sidebar{width:250px;flex:0 0 250px;border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;padding:12px 10px;background:var(--bg)}
+.sidebar-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:2px 2px 10px;border-bottom:1px solid var(--line)}
+.sidebar-title{font-size:13px;font-weight:650}
+.sidebar-new{font-size:12px;padding:5px 8px;white-space:nowrap}
+.history-list{flex:1;min-height:0;overflow-y:auto;padding-top:8px}
+.history-empty{font-size:12px;line-height:1.6;color:var(--muted);padding:10px 5px}
+.history-row{display:flex;align-items:stretch;gap:3px;margin:3px 0}
+.history-open{display:block;flex:1;min-width:0;text-align:left;padding:7px 8px;border-color:transparent;background:transparent}
+.history-title{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:500}
+.history-date{display:block;font-size:10px;color:var(--muted);margin-top:2px}
+.history-row.active .history-open{background:var(--soft);border-color:var(--line)}
+.history-delete{align-self:center;padding:4px 7px;border-color:transparent;background:transparent;color:var(--muted);font-size:12px}
+.sidebar-foot{font-size:10px;color:var(--muted);border-top:1px solid var(--line);padding:9px 3px 0}
+.main-area{flex:1;min-width:0;min-height:0}
+main{height:100%;width:100%;max-width:800px;margin:auto;padding:0 16px;display:flex;flex-direction:column}
+#sidebarBackdrop{display:none}
 #messages{flex:1;overflow:auto;padding:24px 0}.welcome{color:var(--muted);padding:18px 0}
 .message{padding:14px 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
 .role{font-size:12px;color:var(--muted);margin-bottom:5px}
@@ -61,11 +78,20 @@ dialog::backdrop{background:#0007}h2{font-size:18px;margin:0 0 16px}
 .field input[type=password],.field textarea{width:100%;border:1px solid var(--line);border-radius:7px;padding:10px;background:var(--input);color:var(--text)}
 .small{font-size:12px;color:var(--muted)}.check{display:flex;align-items:center;gap:8px;font-size:13px}
 .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
-@media(max-width:500px){header{padding:0 9px;gap:6px}.brand{font-size:14px}.model-wrap{gap:4px}.model-label{display:none}select{width:36vw;min-width:100px;max-width:155px;font-size:12px;padding:7px 4px}header button{font-size:13px;padding:7px 8px}main{padding:0 11px}#messages{padding-top:16px}}
+@media(max-width:700px){
+ .sidebar-toggle{display:inline-flex;align-items:center;justify-content:center;padding:7px 9px}
+ .sidebar{position:fixed;top:58px;bottom:0;left:0;z-index:31;width:min(300px,86vw);transform:translateX(-105%);transition:transform .18s ease;box-shadow:none}
+ body.sidebar-open .sidebar{transform:translateX(0);box-shadow:8px 0 28px #0002}
+ #sidebarBackdrop{display:none;position:fixed;top:58px;bottom:0;left:0;right:0;z-index:30;background:#0006}
+ body.sidebar-open #sidebarBackdrop{display:block}
+ .layout{height:calc(100dvh - 58px)}
+}
+@media(max-width:500px){header{padding:0 7px;gap:5px}.brand{font-size:14px}.model-wrap{gap:4px}.model-label{display:none}select{width:34vw;min-width:94px;max-width:150px;font-size:12px;padding:7px 3px}header button{font-size:12px;padding:7px 6px}main{padding:0 11px}#messages{padding-top:16px}.sidebar-toggle{font-size:14px}}
 </style>
 </head>
 <body>
 <header>
+  <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="チャット履歴を開く" aria-expanded="false">☰</button>
   <span class="brand">Groq AI</span><span class="spacer"></span>
   <div class="model-wrap"><span class="model-label">モデル</span>
     <select id="model" aria-label="モデルを選択">
@@ -78,6 +104,14 @@ dialog::backdrop{background:#0007}h2{font-size:18px;margin:0 0 16px}
   <button id="new" type="button">新規</button>
   <button id="openSettings" type="button">設定</button>
 </header>
+<div id="sidebarBackdrop" aria-hidden="true"></div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar" aria-label="チャット履歴">
+    <div class="sidebar-head"><span class="sidebar-title">チャット履歴</span><button id="newChat" class="sidebar-new" type="button">＋ 新規</button></div>
+    <div id="chatList" class="history-list"><div class="history-empty">履歴を読み込み中…</div></div>
+    <div class="sidebar-foot">履歴はこの端末のブラウザに保存されます。</div>
+  </aside>
+  <div class="main-area">
 <main>
   <div id="messages" aria-live="polite"><div class="welcome">メッセージを入力して始めてください。</div></div>
   <div class="composer">
@@ -90,6 +124,8 @@ dialog::backdrop{background:#0007}h2{font-size:18px;margin:0 0 16px}
     <div class="note"><span id="status" class="status">準備完了</span> · 個人情報は入力しないでください。AIの回答は間違うことがあります。</div>
   </div>
 </main>
+  </div>
+</div>
 <dialog id="settings">
   <form id="form">
     <h2>設定</h2>
@@ -111,7 +147,8 @@ var $=function(id){return document.getElementById(id);};
 var apiKey=sessionStorage.getItem('groq-key-session')||localStorage.getItem('groq-key')||'';
 var remember=!!localStorage.getItem('groq-key');
 var instruction=sessionStorage.getItem('groq-instruction')||'';
-var messages=[],busy=false,controller=null;
+var messages=[],busy=false,controller=null,chats=[],activeChatId=null;
+var CHAT_STORAGE_KEY='groq-chat-history-v1',ACTIVE_CHAT_KEY='groq-active-chat-v1',MAX_CHATS=40;
 var SEARCH_MODELS=['openai/gpt-oss-120b','openai/gpt-oss-20b'];
 function status(text){$('status').textContent=text;}
 function safeError(statusCode,detail){
@@ -131,6 +168,101 @@ function safeError(statusCode,detail){
 }
 function currentModel(){return $('model').value||SEARCH_MODELS[0];}
 function setModel(id){$('model').value=id;}
+function makeChatId(){return String(Date.now())+'-'+Math.random().toString(36).slice(2,9);}
+function shortTitle(text){
+ var title=String(text||'').replace(/\\s+/g,' ').trim()||'新しいチャット';
+ return title.length>38?title.slice(0,38)+'…':title;
+}
+function persistChatList(){
+ try{
+  chats=chats.slice(0,MAX_CHATS);
+  localStorage.setItem(CHAT_STORAGE_KEY,JSON.stringify(chats));
+  if(activeChatId)localStorage.setItem(ACTIVE_CHAT_KEY,activeChatId);
+  else localStorage.removeItem(ACTIVE_CHAT_KEY);
+  return true;
+ }catch(e){status('履歴を保存できませんでした。ブラウザの保存容量を確認してください。');return false;}
+}
+function saveCurrentChat(){
+ if(!messages.length)return;
+ var firstUser=messages.find(function(m){return m.role==='user';});
+ if(!firstUser)return;
+ var item=chats.find(function(c){return c.id===activeChatId;});
+ if(!item){item={id:makeChatId(),createdAt:Date.now(),title:'新しいチャット',messages:[],model:currentModel()};activeChatId=item.id;}
+ item.title=shortTitle(firstUser.content);
+ item.updatedAt=Date.now();
+ item.model=currentModel();
+ item.messages=messages.slice(-100).map(function(m){return {role:m.role,content:String(m.content||'')};});
+ chats=[item].concat(chats.filter(function(c){return c.id!==item.id;}));
+ persistChatList();
+ renderHistory();
+}
+function renderHistory(){
+ var list=$('chatList');if(!list)return;
+ list.replaceChildren();
+ if(!chats.length){var empty=document.createElement('div');empty.className='history-empty';empty.textContent='まだチャットはありません。\n新規から会話を始めてください。';list.appendChild(empty);return;}
+ chats.forEach(function(chat){
+  var row=document.createElement('div');row.className='history-row'+(chat.id===activeChatId?' active':'');
+  var open=document.createElement('button');open.type='button';open.className='history-open';open.title=chat.title||'新しいチャット';
+  var title=document.createElement('span');title.className='history-title';title.textContent=chat.title||'新しいチャット';
+  var date=document.createElement('span');date.className='history-date';
+  var when=new Date(chat.updatedAt||chat.createdAt||Date.now());
+  date.textContent=when.toLocaleDateString('ja-JP',{month:'numeric',day:'numeric'});
+  open.appendChild(title);open.appendChild(date);open.addEventListener('click',function(){openChat(chat.id);});
+  var del=document.createElement('button');del.type='button';del.className='history-delete';del.textContent='×';del.title='このチャットを削除';del.setAttribute('aria-label',(chat.title||'チャット')+'を削除');
+  del.addEventListener('click',function(){deleteChat(chat.id);});
+  row.appendChild(open);row.appendChild(del);list.appendChild(row);
+ });
+}
+function openChat(id){
+ if(busy)return;
+ saveCurrentChat();
+ var chat=chats.find(function(c){return c.id===id;});if(!chat)return;
+ activeChatId=chat.id;
+ messages=chat.messages.filter(function(m){return m&&(m.role==='user'||m.role==='assistant');}).map(function(m){return {role:m.role,content:String(m.content||'')};});
+ if(chat.model&&Array.from($('model').options).some(function(o){return o.value===chat.model;}))setModel(chat.model);
+ try{localStorage.setItem(ACTIVE_CHAT_KEY,activeChatId);}catch(ignore){}
+ render();renderHistory();closeSidebar();status('履歴を開きました');
+}
+function startNewChat(){
+ if(busy)return;
+ saveCurrentChat();activeChatId=null;messages=[];render();renderHistory();
+ try{localStorage.removeItem(ACTIVE_CHAT_KEY);}catch(ignore){}
+ closeSidebar();status('新しいチャット');$('prompt').focus();
+}
+function deleteChat(id){
+ if(busy)return;
+ var chat=chats.find(function(c){return c.id===id;});if(!chat)return;
+ if(!window.confirm('「'+(chat.title||'新しいチャット')+'」を削除しますか？'))return;
+ chats=chats.filter(function(c){return c.id!==id;});
+ if(activeChatId===id){
+  activeChatId=null;messages=[];
+  try{localStorage.removeItem(ACTIVE_CHAT_KEY);}catch(ignore){}
+  if(chats.length)openChat(chats[0].id);else render();
+ }
+ persistChatList();renderHistory();status('チャットを削除しました');
+}
+function loadChatHistory(){
+ try{
+  var parsed=JSON.parse(localStorage.getItem(CHAT_STORAGE_KEY)||'[]');
+  chats=Array.isArray(parsed)?parsed.filter(function(c){return c&&typeof c.id==='string'&&Array.isArray(c.messages);}).sort(function(a,b){return (b.updatedAt||b.createdAt||0)-(a.updatedAt||a.createdAt||0);}).slice(0,MAX_CHATS):[];
+ }catch(ignore){chats=[];}
+ var lastId=null;try{lastId=localStorage.getItem(ACTIVE_CHAT_KEY);}catch(ignore){}
+ var initial=chats.find(function(c){return c.id===lastId;})||chats[0];
+ if(initial){
+  activeChatId=initial.id;
+  messages=initial.messages.filter(function(m){return m&&(m.role==='user'||m.role==='assistant');}).map(function(m){return {role:m.role,content:String(m.content||'')};});
+  if(initial.model&&Array.from($('model').options).some(function(o){return o.value===initial.model;}))setModel(initial.model);
+ }
+ render();renderHistory();
+}
+function closeSidebar(){
+ document.body.classList.remove('sidebar-open');
+ var b=$('sidebarToggle');if(b)b.setAttribute('aria-expanded','false');
+}
+function toggleSidebar(){
+ var opened=document.body.classList.toggle('sidebar-open');
+ $('sidebarToggle').setAttribute('aria-expanded',opened?'true':'false');
+}
 function render(){
  var el=$('messages');
  if(window.MathJax&&window.MathJax.typesetClear){try{window.MathJax.typesetClear([el]);}catch(ignore){}}
@@ -289,7 +421,7 @@ async function send(isRegenerate){
  if(!apiKey){$('settings').showModal();status('APIキーを設定してください');return;}
  var webSearch=$('webSearch').checked;
  if(webSearch&&!SEARCH_MODELS.includes(currentModel())){setModel('openai/gpt-oss-120b');}
- if(!isRegenerate)messages.push({role:'user',content:text});
+ if(!isRegenerate){messages.push({role:'user',content:text});saveCurrentChat();}
  $('prompt').value='';
  setBusy(true);controller=new AbortController();
  messages.push({role:'assistant',content:''});render();
@@ -339,13 +471,16 @@ async function send(isRegenerate){
    status('エラー');
   }
  }finally{
-  setBusy(false);controller=null;render();typesetMath();
+  setBusy(false);controller=null;saveCurrentChat();render();typesetMath();
  }
 }
 $('send').addEventListener('click',function(){send(false);});
 $('prompt').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();send(false);}});
 $('stop').addEventListener('click',function(){if(controller)controller.abort();});
-$('new').addEventListener('click',function(){if(busy)return;messages=[];render();status('準備完了');$('prompt').focus();});
+$('new').addEventListener('click',startNewChat);
+$('newChat').addEventListener('click',startNewChat);
+$('sidebarToggle').addEventListener('click',toggleSidebar);
+$('sidebarBackdrop').addEventListener('click',closeSidebar);
 $('themeToggle').addEventListener('click',function(){document.body.classList.toggle('dark');var dark=document.body.classList.contains('dark');try{localStorage.setItem('groq-theme',dark?'dark':'light');}catch(ignore){}updateThemeButton();});
 function updateThemeButton(){var dark=document.body.classList.contains('dark');$('themeToggle').textContent=dark?'白':'黒';$('themeToggle').title=dark?'白背景に切替':'黒背景に切替';$('themeToggle').setAttribute('aria-label',dark?'白背景に切替':'黒背景に切替');}
 try{document.body.classList.toggle('dark',localStorage.getItem('groq-theme')==='dark');}catch(ignore){}
@@ -354,6 +489,7 @@ $('openSettings').addEventListener('click',function(){$('key').value=apiKey;$('r
 $('close').addEventListener('click',function(){$('settings').close();});
 $('form').addEventListener('submit',function(e){e.preventDefault();saveSettings();$('settings').close();status(apiKey?'準備完了':'APIキー未設定');});
 $('deleteKey').addEventListener('click',function(){apiKey='';remember=false;$('key').value='';$('remember').checked=false;localStorage.removeItem('groq-key');sessionStorage.removeItem('groq-key-session');status('APIキーを削除しました');});
+loadChatHistory();
 })();
 </script>
 </body>
