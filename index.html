@@ -7,13 +7,13 @@
 button,input,textarea,select{font:inherit}button{padding:8px 12px;border:1px solid #ddd;border-radius:7px;background:#fff;color:#222;cursor:pointer}button:hover{background:#f7f7f7}button:disabled{opacity:.45}button:focus-visible,textarea:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #777;outline-offset:2px}
 header{min-height:60px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;gap:10px;padding:0 16px}.brand{font-weight:650;white-space:nowrap}.spacer{flex:1}.model-wrap{display:flex;align-items:center;gap:7px;min-width:0}.model-label{font-size:12px;color:#777;white-space:nowrap}select{width:min(330px,43vw);min-width:130px;padding:8px 30px 8px 10px;border:1px solid #d5d5d5;border-radius:7px;background:#fff;color:#222;font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}select:focus{border-color:#777}
 main{height:calc(100dvh - 54px);max-width:780px;margin:auto;padding:0 16px;display:flex;flex-direction:column}#messages{flex:1;overflow:auto;padding:24px 0}.welcome{color:#777;padding:18px 0}.message{padding:14px 0;border-bottom:1px solid #f0f0f0;overflow-wrap:anywhere}.role{font-size:12px;color:#777;margin-bottom:4px}.content{white-space:pre-wrap;overflow-wrap:anywhere}
-.composer{padding:10px 0 max(12px,env(safe-area-inset-bottom));background:white}.box{display:flex;gap:8px;align-items:flex-end;border:1px solid #ccc;border-radius:9px;padding:7px}textarea{flex:1;min-width:0;min-height:40px;max-height:180px;resize:vertical;border:0;outline:none!important;padding:7px;color:#222;background:transparent}.send{background:#222;color:#fff;border-color:#222}.send:hover{background:#444}.note{font-size:11px;color:#777;margin-top:6px}.status{font-size:12px}
+.composer{padding:10px 0 max(12px,env(safe-area-inset-bottom));background:white}.box{display:flex;gap:8px;align-items:flex-end;border:1px solid #ccc;border-radius:9px;padding:7px}textarea{flex:1;min-width:0;min-height:40px;max-height:180px;resize:vertical;border:0;outline:none!important;padding:7px;color:#222;background:transparent}.send{background:#222;color:#fff;border-color:#222}.send:hover{background:#444}.note{font-size:11px;color:#777;margin-top:6px}.status{font-size:12px}.search-line{display:flex;align-items:center;gap:7px;margin-top:7px;font-size:12px;color:#666}.search-line input{width:15px;height:15px;margin:0;accent-color:#222}.search-hint{color:#888;font-size:11px;margin-left:2px}
 dialog{width:min(440px,calc(100vw - 28px));border:1px solid #ddd;border-radius:9px;padding:18px}dialog::backdrop{background:#0005}h2{font-size:18px;margin:0 0 16px}.field{display:grid;gap:7px;margin:14px 0}.field label{font-size:14px}.field input[type=password],.field textarea{width:100%;border:1px solid #ddd;border-radius:7px;padding:10px;background:#fff;color:#222}.small{font-size:12px;color:#777}.check{display:flex;align-items:center;gap:8px;font-size:13px}.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
 @media(max-width:500px){header{padding:0 9px;gap:6px;min-height:56px}.brand{font-size:14px}.model-wrap{gap:4px}.model-label{display:none}select{width:34vw;min-width:100px;max-width:145px;font-size:12px;padding:7px 4px}header button{font-size:13px;padding:7px 8px}main{padding:0 11px}#messages{padding-top:16px}}
 </style></head><body>
 <header><span class="brand">Groq AI</span><span class="spacer"></span><div class="model-wrap"><span class="model-label">モデル</span><select id="model" aria-label="モデルを選択"><option value="openai/gpt-oss-120b">GPT-OSS 120B — 高性能</option><option value="openai/gpt-oss-20b">GPT-OSS 20B — 高速</option><option value="qwen/qwen3.8-27b">Qwen 3.8 27B — 画像対応</option></select></div><button id="new" type="button">新規</button><button id="openSettings" type="button">設定</button></header>
 <main><div id="messages" aria-live="polite"><div class="welcome">メッセージを入力して始めてください。</div></div>
-<div class="composer"><div class="box"><textarea id="prompt" rows="1" placeholder="メッセージを入力…" aria-label="メッセージ"></textarea><button id="stop" type="button" disabled>停止</button><button id="send" class="send" type="button">送信</button></div><div class="note"><span id="status" class="status">準備完了</span> · 個人情報は入力しないでください。AIの回答は間違うことがあります。</div></div></main>
+<div class="composer"><div class="box"><textarea id="prompt" rows="1" placeholder="メッセージを入力…" aria-label="メッセージ"></textarea><button id="stop" type="button" disabled>停止</button><button id="send" class="send" type="button">送信</button></div><label class="search-line"><input id="webSearch" type="checkbox"><span>Web検索を使う</span><span class="search-hint">最新情報を調べる（GPT-OSSに自動切替）</span></label><div class="note"><span id="status" class="status">準備完了</span> · 個人情報は入力しないでください。AIの回答は間違うことがあります。</div></div></main>
 <dialog id="settings"><form id="form"><h2>設定</h2><div class="field"><label for="key">Groq APIキー</label><input id="key" type="password" autocomplete="off" placeholder="gsk_…"><div class="small">共有端末ではキーを保存せず、使用後に削除してください。</div><label class="check"><input id="remember" type="checkbox">この端末にAPIキーを保存する</label></div><div class="field"><label for="instruction">追加指示（省略可）</label><textarea id="instruction" rows="3" placeholder="例：中学生にもわかる言葉で説明する"></textarea></div><div class="field"><div class="small">選択肢は現在のGroq公式モデル一覧をもとに設定しています。利用可能なモデルは変更されることがあります。</div><div class="small">Groq APIの利用にはAPIキーが必要です。</div></div><div class="actions"><button id="deleteKey" type="button">キーを削除</button><button id="close" type="button">閉じる</button><button type="submit" class="send">保存</button></div></form></dialog>
 <script>
 (function(){
@@ -38,27 +38,93 @@ function saveSettings(){
  sessionStorage.setItem('groq-instruction',instruction);
 }
 async function send(){
- if(busy)return;var text=$('prompt').value.trim();if(!text)return;
+ if(busy)return;
+ var text=$('prompt').value.trim();
+ if(!text)return;
  if(!apiKey){$('settings').showModal();status('APIキーを設定してください');return;}
- messages.push({role:'user',content:text});$('prompt').value='';render();
- busy=true;$('send').disabled=true;$('stop').disabled=false;controller=new AbortController();messages.push({role:'assistant',content:''});status('生成中…');render();
+ var webSearch=$('webSearch').checked;
+ if(webSearch&&$('model').value!=='openai/gpt-oss-120b'&&$('model').value!=='openai/gpt-oss-20b'){
+  $('model').value='openai/gpt-oss-120b';
+  status('検索対応モデルへ切替');
+ }
+ messages.push({role:'user',content:text});
+ $('prompt').value='';
+ render();
+ busy=true;
+ $('send').disabled=true;
+ $('stop').disabled=false;
+ controller=new AbortController();
+ messages.push({role:'assistant',content:''});
+ status(webSearch?'Web検索中…':'生成中…');
+ render();
  try{
   var system='あなたは親切で正確なAIアシスタントです。日本語で、わかりやすく回答してください。'+(instruction?'\n追加指示: '+instruction:'');
   var context=[{role:'system',content:system}].concat(messages.slice(0,-1).map(function(m){return {role:m.role,content:m.content};}));
-  var r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{Authorization:'Bearer '+apiKey,'Content-Type':'application/json'},body:JSON.stringify({model:$('model').value||'llama-3.3-70b-versatile',messages:context,temperature:0.5,stream:true}),signal:controller.signal});
-  if(!r.ok)throw new Error('HTTP '+r.status+' — '+(await r.text()).slice(0,250));
-  var reader=r.body.getReader(),decoder=new TextDecoder(),buffer='';
-  while(true){
-   var part=await reader.read();if(part.done)break;
-   buffer+=decoder.decode(part.value,{stream:true});var lines=buffer.split('\n');buffer=lines.pop();
-   for(var i=0;i<lines.length;i++){
-    var line=lines[i].trim();if(line.indexOf('data:')!==0)continue;var chunk=line.slice(5).trim();if(chunk==='[DONE]')continue;
-    try{var obj=JSON.parse(chunk);messages[messages.length-1].content+=(obj.choices&&obj.choices[0]&&obj.choices[0].delta.content)||'';render();}catch(ignore){}
+  if(webSearch){
+   var searchResponse=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',
+    headers:{Authorization:'Bearer '+apiKey,'Content-Type':'application/json'},
+    body:JSON.stringify({
+     model:$('model').value,
+     messages:context,
+     temperature:1,
+     max_completion_tokens:2048,
+     reasoning_effort:'low',
+     stream:false,
+     tool_choice:'required',
+     tools:[{type:'browser_search'}],
+     citation_options:'enabled'
+    }),
+    signal:controller.signal
+   });
+   if(!searchResponse.ok)throw new Error('Groq API HTTP '+searchResponse.status+' — '+(await searchResponse.text()).slice(0,350));
+   var searchData=await searchResponse.json();
+   var searchText=searchData.choices&&searchData.choices[0]&&searchData.choices[0].message&&searchData.choices[0].message.content;
+   messages[messages.length-1].content=searchText||'検索結果を取得できませんでした。検索語を変えて再度お試しください。';
+   render();
+   status('検索完了');
+  }else{
+   var r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',
+    headers:{Authorization:'Bearer '+apiKey,'Content-Type':'application/json'},
+    body:JSON.stringify({model:$('model').value||'openai/gpt-oss-120b',messages:context,temperature:0.5,stream:true}),
+    signal:controller.signal
+   });
+   if(!r.ok)throw new Error('Groq API HTTP '+r.status+' — '+(await r.text()).slice(0,250));
+   var reader=r.body.getReader(),decoder=new TextDecoder(),buffer='';
+   while(true){
+    var part=await reader.read();
+    if(part.done)break;
+    buffer+=decoder.decode(part.value,{stream:true});
+    var lines=buffer.split('\n');
+    buffer=lines.pop();
+    for(var i=0;i<lines.length;i++){
+     var line=lines[i].trim();
+     if(line.indexOf('data:')!==0)continue;
+     var chunk=line.slice(5).trim();
+     if(chunk==='[DONE]')continue;
+     try{
+      var obj=JSON.parse(chunk);
+      messages[messages.length-1].content+=(obj.choices&&obj.choices[0]&&obj.choices[0].delta.content)||'';
+      render();
+     }catch(ignore){}
+    }
    }
+   status('完了');
   }
-  status('完了');
- }catch(e){if(e.name==='AbortError')status('停止しました');else{messages[messages.length-1].content='エラー: '+e.message;render();status('エラー');}}
- finally{busy=false;controller=null;$('send').disabled=false;$('stop').disabled=true;}
+ }catch(e){
+  if(e.name==='AbortError')status('停止しました');
+  else{
+   messages[messages.length-1].content='エラー: '+e.message;
+   render();
+   status('エラー');
+  }
+ }finally{
+  busy=false;
+  controller=null;
+  $('send').disabled=false;
+  $('stop').disabled=true;
+ }
 }
 $('send').onclick=send;
 $('prompt').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
