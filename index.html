@@ -2,6 +2,8 @@
 <html lang="ja"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#fff">
 <title>Groq AI</title>
+<script>window.MathJax={tex:{inlineMath:[["\\(","\\)"],["$","$"]],displayMath:[["\\[","\\]"],["$","$"]],processEscapes:true},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]}};</script>
+<script defer id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js"></script>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#fff;color:#222;font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 button,input,textarea,select{font:inherit}button{padding:8px 12px;border:1px solid #ddd;border-radius:7px;background:#fff;color:#222;cursor:pointer}button:hover{background:#f7f7f7}button:disabled{opacity:.45}button:focus-visible,textarea:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #777;outline-offset:2px}
@@ -10,8 +12,11 @@ main{height:calc(100dvh - 54px);max-width:780px;margin:auto;padding:0 16px;displ
 .composer{padding:10px 0 max(12px,env(safe-area-inset-bottom));background:white}.box{display:flex;gap:8px;align-items:flex-end;border:1px solid #ccc;border-radius:9px;padding:7px}textarea{flex:1;min-width:0;min-height:40px;max-height:180px;resize:vertical;border:0;outline:none!important;padding:7px;color:#222;background:transparent}.send{background:#222;color:#fff;border-color:#222}.send:hover{background:#444}.note{font-size:11px;color:#777;margin-top:6px}.status{font-size:12px}.search-line{display:flex;align-items:center;gap:7px;margin-top:7px;font-size:12px;color:#666}.search-line input{width:15px;height:15px;margin:0;accent-color:#222}.search-hint{color:#888;font-size:11px;margin-left:2px}
 dialog{width:min(440px,calc(100vw - 28px));border:1px solid #ddd;border-radius:9px;padding:18px}dialog::backdrop{background:#0005}h2{font-size:18px;margin:0 0 16px}.field{display:grid;gap:7px;margin:14px 0}.field label{font-size:14px}.field input[type=password],.field textarea{width:100%;border:1px solid #ddd;border-radius:7px;padding:10px;background:#fff;color:#222}.small{font-size:12px;color:#777}.check{display:flex;align-items:center;gap:8px;font-size:13px}.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
 @media(max-width:500px){header{padding:0 9px;gap:6px;min-height:56px}.brand{font-size:14px}.model-wrap{gap:4px}.model-label{display:none}select{width:34vw;min-width:100px;max-width:145px;font-size:12px;padding:7px 4px}header button{font-size:13px;padding:7px 8px}main{padding:0 11px}#messages{padding-top:16px}}
+
+.message-actions{display:flex;gap:7px;margin-top:10px}.message-actions button{font-size:12px;padding:5px 9px;color:#555}.math-block{max-width:100%;overflow-x:auto;overflow-y:hidden;padding:4px 0}.md-body mjx-container{max-width:100%;overflow-x:auto;overflow-y:hidden}.md-body mjx-container[display="true"]{margin:12px 0!important}
+body.dark{background:#111;color:#eee}body.dark header,body.dark .composer,body.dark dialog{background:#111;color:#eee;border-color:#333}body.dark button,body.dark select,body.dark input,body.dark .field textarea{background:#191919;color:#eee;border-color:#444}body.dark button:hover{background:#292929}body.dark .send{background:#eee;color:#111;border-color:#eee}body.dark .send:hover{background:#ddd}body.dark .message{border-bottom-color:#292929}body.dark .role,body.dark .note,body.dark .status,body.dark .small,body.dark .model-label,body.dark .search-line,body.dark .search-hint,body.dark .welcome{color:#aaa}body.dark .box{border-color:#444}body.dark .md-body blockquote{background:#1b1b1b;color:#ccc;border-left-color:#777}body.dark .md-body code,body.dark .md-body pre{background:#1d1d1d;border-color:#444;color:#eee}body.dark .md-body a{color:#a9c6ff}body.dark .md-body hr{border-top-color:#444}body.dark .md-body th,body.dark .md-body td{border-color:#444}body.dark .md-body th{background:#222}body.dark dialog::backdrop{background:#0009}
 </style></head><body>
-<header><span class="brand">Groq AI</span><span class="spacer"></span><div class="model-wrap"><span class="model-label">モデル</span><select id="model" aria-label="モデルを選択"><option value="openai/gpt-oss-120b">GPT-OSS 120B — 高性能</option><option value="openai/gpt-oss-20b">GPT-OSS 20B — 高速</option><option value="qwen/qwen3.8-27b">Qwen 3.8 27B — 画像対応</option></select></div><button id="new" type="button">新規</button><button id="openSettings" type="button">設定</button></header>
+<header><span class="brand">Groq AI</span><span class="spacer"></span><div class="model-wrap"><span class="model-label">モデル</span><select id="model" aria-label="モデルを選択"><option value="openai/gpt-oss-120b">GPT-OSS 120B — 高性能</option><option value="openai/gpt-oss-20b">GPT-OSS 20B — 高速</option><option value="qwen/qwen3.8-27b">Qwen 3.8 27B — 画像対応</option></select></div><button id="themeToggle" type="button" aria-label="白黒テーマ切替" title="テーマ切替">白</button><button id="new" type="button">新規</button><button id="openSettings" type="button">設定</button></header>
 <main><div id="messages" aria-live="polite"><div class="welcome">メッセージを入力して始めてください。</div></div>
 <div class="composer"><div class="box"><textarea id="prompt" rows="1" placeholder="メッセージを入力…" aria-label="メッセージ"></textarea><button id="stop" type="button" disabled>停止</button><button id="send" class="send" type="button">送信</button></div><label class="search-line"><input id="webSearch" type="checkbox"><span>Web検索を使う</span><span class="search-hint">最新情報を調べる（GPT-OSSに自動切替）</span></label><div class="note"><span id="status" class="status">準備完了</span> · 個人情報は入力しないでください。AIの回答は間違うことがあります。</div></div></main>
 <dialog id="settings"><form id="form"><h2>設定</h2><div class="field"><label for="key">Groq APIキー</label><input id="key" type="password" autocomplete="off" placeholder="gsk_…"><div class="small">共有端末ではキーを保存せず、使用後に削除してください。</div><label class="check"><input id="remember" type="checkbox">この端末にAPIキーを保存する</label></div><div class="field"><label for="instruction">追加指示（省略可）</label><textarea id="instruction" rows="3" placeholder="例：中学生にもわかる言葉で説明する"></textarea></div><div class="field"><div class="small">選択肢は現在のGroq公式モデル一覧をもとに設定しています。利用可能なモデルは変更されることがあります。</div><div class="small">Groq APIの利用にはAPIキーが必要です。</div></div><div class="actions"><button id="deleteKey" type="button">キーを削除</button><button id="close" type="button">閉じる</button><button type="submit" class="send">保存</button></div></form></dialog>
@@ -115,15 +120,53 @@ function renderMarkdown(parent,source){
 }
 function render(){
  var el=$('messages');
+ if(window.MathJax&&window.MathJax.typesetClear){try{window.MathJax.typesetClear([el]);}catch(ignore){}}
  if(!messages.length){el.innerHTML='<div class="welcome">メッセージを入力して始めてください。</div>';return;}
  el.replaceChildren();
- messages.forEach(function(m){
+ messages.forEach(function(m,index){
   var item=document.createElement('section');item.className='message';
   var role=document.createElement('div');role.className='role';role.textContent=m.role==='user'?'あなた':'Groq AI';
   var content=document.createElement('div');content.className='content md-body';renderMarkdown(content,m.content);
-  item.appendChild(role);item.appendChild(content);el.appendChild(item);
+  item.appendChild(role);item.appendChild(content);
+  if(m.role==='assistant'&&!busy&&m.content){
+   var actions=document.createElement('div');actions.className='message-actions';
+   var copy=document.createElement('button');copy.type='button';copy.textContent='回答をコピー';copy.onclick=function(){copyText(m.content);};
+   var retry=document.createElement('button');retry.type='button';retry.textContent='再生成';retry.onclick=function(){regenerate(index);};
+   actions.appendChild(copy);actions.appendChild(retry);item.appendChild(actions);
+  }
+  el.appendChild(item);
  });
  el.scrollTop=el.scrollHeight;
+}
+function typesetMath(){
+ var el=$('messages');
+ if(!window.MathJax||typeof window.MathJax.typesetPromise!=='function'){mathTypesetPending=true;return;}
+ mathTypesetPending=false;
+ try{if(window.MathJax.typesetClear)window.MathJax.typesetClear([el]);}catch(ignore){}
+ window.MathJax.typesetPromise([el]).catch(function(){status('数式の表示に失敗しました');});
+}
+var mathTypesetPending=false;
+window.addEventListener('load',function(){if(mathTypesetPending)typesetMath();});
+function copyText(text){
+ if(navigator.clipboard&&navigator.clipboard.writeText){
+  navigator.clipboard.writeText(text).then(function(){status('回答をコピーしました');}).catch(function(){fallbackCopy(text);});
+ }else fallbackCopy(text);
+}
+function fallbackCopy(text){
+ var field=document.createElement('textarea');field.value=text;field.setAttribute('readonly','');field.style.position='fixed';field.style.opacity='0';document.body.appendChild(field);field.select();
+ var ok=false;try{ok=document.execCommand('copy');}catch(ignore){}
+ field.remove();status(ok?'回答をコピーしました':'コピーできませんでした');
+}
+async function regenerate(index){
+ if(busy)return;
+ if(!messages[index]||messages[index].role!=='assistant')return;
+ var userIndex=index-1;
+ while(userIndex>=0&&messages[userIndex].role!=='user')userIndex--;
+ if(userIndex<0){status('再生成する質問が見つかりません');return;}
+ messages=messages.slice(0,index);
+ $('prompt').value='';
+ render();
+ await send(true);
 }
 function saveSettings(){
  apiKey=$('key').value.trim();remember=$('remember').checked;instruction=$('instruction').value.trim();
@@ -131,98 +174,69 @@ function saveSettings(){
  else{localStorage.removeItem('groq-key');if(apiKey)sessionStorage.setItem('groq-key-session',apiKey);else sessionStorage.removeItem('groq-key-session');}
  sessionStorage.setItem('groq-instruction',instruction);
 }
-async function send(){
+async function send(isRegenerate){
  if(busy)return;
- var text=$('prompt').value.trim();
- if(!text)return;
+ var text='';
+ if(isRegenerate){
+  var last=messages[messages.length-1];
+  if(!last||last.role!=='user'){status('再生成する質問が見つかりません');return;}
+  text=last.content;
+ }else{
+  text=$('prompt').value.trim();
+  if(!text)return;
+ }
  if(!apiKey){$('settings').showModal();status('APIキーを設定してください');return;}
  var webSearch=$('webSearch').checked;
- if(webSearch&&$('model').value!=='openai/gpt-oss-120b'&&$('model').value!=='openai/gpt-oss-20b'){
-  $('model').value='openai/gpt-oss-120b';
-  status('検索対応モデルへ切替');
- }
- messages.push({role:'user',content:text});
+ if(webSearch&&$('model').value!=='openai/gpt-oss-120b'&&$('model').value!=='openai/gpt-oss-20b'){$('model').value='openai/gpt-oss-120b';status('検索対応モデルへ切替');}
+ if(!isRegenerate)messages.push({role:'user',content:text});
  $('prompt').value='';
  render();
- busy=true;
- $('send').disabled=true;
- $('stop').disabled=false;
- controller=new AbortController();
- messages.push({role:'assistant',content:''});
- status(webSearch?'Web検索中…':'生成中…');
- render();
+ busy=true;$('send').disabled=true;$('stop').disabled=false;controller=new AbortController();
+ messages.push({role:'assistant',content:''});status(webSearch?'Web検索中…':'生成中…');render();
  try{
-  var system='あなたは親切で正確なAIアシスタントです。日本語で、わかりやすく回答してください。'+(instruction?'\n追加指示: '+instruction:'');
+  var system='あなたは親切で正確なAIアシスタントです。日本語で、わかりやすく回答してください。Markdownが適切な場合は見出し・リスト・コード・LaTeX形式の数式を使ってください。'+(instruction?'\n追加指示: '+instruction:'');
   var context=[{role:'system',content:system}].concat(messages.slice(0,-1).map(function(m){return {role:m.role,content:m.content};}));
   if(webSearch){
    var searchResponse=await fetch('https://api.groq.com/openai/v1/chat/completions',{
-    method:'POST',
-    headers:{Authorization:'Bearer '+apiKey,'Content-Type':'application/json'},
-    body:JSON.stringify({
-     model:$('model').value,
-     messages:context,
-     temperature:1,
-     max_completion_tokens:2048,
-     reasoning_effort:'low',
-     stream:false,
-     tool_choice:'required',
-     tools:[{type:'browser_search'}]
-    }),
+    method:'POST',headers:{Authorization:'Bearer '+apiKey,'Content-Type':'application/json'},
+    body:JSON.stringify({model:$('model').value,messages:context,temperature:1,max_completion_tokens:2048,reasoning_effort:'low',stream:false,tool_choice:'required',tools:[{type:'browser_search'}]}),
     signal:controller.signal
    });
    if(!searchResponse.ok)throw new Error('Groq API HTTP '+searchResponse.status+' — '+(await searchResponse.text()).slice(0,350));
    var searchData=await searchResponse.json();
    var searchText=searchData.choices&&searchData.choices[0]&&searchData.choices[0].message&&searchData.choices[0].message.content;
    messages[messages.length-1].content=searchText||'検索結果を取得できませんでした。検索語を変えて再度お試しください。';
-   render();
    status('検索完了');
   }else{
-   var r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
-    method:'POST',
-    headers:{Authorization:'Bearer '+apiKey,'Content-Type':'application/json'},
-    body:JSON.stringify({model:$('model').value||'openai/gpt-oss-120b',messages:context,temperature:0.5,stream:true}),
-    signal:controller.signal
-   });
+   var r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{Authorization:'Bearer '+apiKey,'Content-Type':'application/json'},body:JSON.stringify({model:$('model').value||'openai/gpt-oss-120b',messages:context,temperature:0.5,stream:true}),signal:controller.signal});
    if(!r.ok)throw new Error('Groq API HTTP '+r.status+' — '+(await r.text()).slice(0,250));
    var reader=r.body.getReader(),decoder=new TextDecoder(),buffer='';
    while(true){
-    var part=await reader.read();
-    if(part.done)break;
-    buffer+=decoder.decode(part.value,{stream:true});
-    var lines=buffer.split('\n');
-    buffer=lines.pop();
+    var part=await reader.read();if(part.done)break;
+    buffer+=decoder.decode(part.value,{stream:true});var lines=buffer.split('\n');buffer=lines.pop();
     for(var i=0;i<lines.length;i++){
-     var line=lines[i].trim();
-     if(line.indexOf('data:')!==0)continue;
-     var chunk=line.slice(5).trim();
-     if(chunk==='[DONE]')continue;
-     try{
-      var obj=JSON.parse(chunk);
-      messages[messages.length-1].content+=(obj.choices&&obj.choices[0]&&obj.choices[0].delta.content)||'';
-      render();
-     }catch(ignore){}
+     var line=lines[i].trim();if(line.indexOf('data:')!==0)continue;var chunk=line.slice(5).trim();if(chunk==='[DONE]')continue;
+     try{var obj=JSON.parse(chunk);messages[messages.length-1].content+=(obj.choices&&obj.choices[0]&&obj.choices[0].delta.content)||'';}catch(ignore){}
     }
    }
    status('完了');
   }
  }catch(e){
   if(e.name==='AbortError')status('停止しました');
-  else{
-   messages[messages.length-1].content='エラー: '+e.message;
-   render();
-   status('エラー');
-  }
+  else{messages[messages.length-1].content='エラー: '+e.message;status('エラー');}
  }finally{
-  busy=false;
-  controller=null;
-  $('send').disabled=false;
-  $('stop').disabled=true;
+  busy=false;controller=null;$('send').disabled=false;$('stop').disabled=true;
+  render();typesetMath();
  }
 }
 $('send').onclick=send;
 $('prompt').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
 $('stop').onclick=function(){if(controller)controller.abort();};
 $('new').onclick=function(){if(busy)return;messages=[];render();status('準備完了');$('prompt').focus();};
+$('themeToggle').onclick=function(){document.body.classList.toggle('dark');var isDark=document.body.classList.contains('dark');try{localStorage.setItem('groq-theme',isDark?'dark':'light');}catch(ignore){}updateThemeButton();};
+function updateThemeButton(){var isDark=document.body.classList.contains('dark');$('themeToggle').textContent=isDark?'黒':'白';$('themeToggle').title=isDark?'黒背景（クリックで白へ）':'白背景（クリックで黒へ');$('themeToggle').setAttribute('aria-label',isDark?'黒テーマ。クリックで白に切替':'白テーマ。クリックで黒に切替');}
+try{document.body.classList.toggle('dark',localStorage.getItem('groq-theme')==='dark');}catch(ignore){}
+updateThemeButton();
 $('openSettings').onclick=function(){$('key').value=apiKey;$('remember').checked=remember;$('instruction').value=instruction;$('settings').showModal();};
 $('close').onclick=function(){$('settings').close();};
 $('form').onsubmit=function(e){e.preventDefault();saveSettings();$('settings').close();status(apiKey?'準備完了':'APIキー未設定');};
