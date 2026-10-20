@@ -14,7 +14,7 @@ dialog{width:min(440px,calc(100vw - 28px));border:1px solid #ddd;border-radius:9
 @media(max-width:500px){header{padding:0 9px;gap:6px;min-height:56px}.brand{font-size:14px}.model-wrap{gap:4px}.model-label{display:none}select{width:34vw;min-width:100px;max-width:145px;font-size:12px;padding:7px 4px}header button{font-size:13px;padding:7px 8px}main{padding:0 11px}#messages{padding-top:16px}}
 
 .message-actions{display:flex;gap:7px;margin-top:10px}.message-actions button{font-size:12px;padding:5px 9px;color:#555}.math-block{max-width:100%;overflow-x:auto;overflow-y:hidden;padding:4px 0}.md-body mjx-container{max-width:100%;overflow-x:auto;overflow-y:hidden}.md-body mjx-container[display="true"]{margin:12px 0!important}
-body.dark{background:#111;color:#eee}body.dark header,body.dark .composer,body.dark dialog{background:#111;color:#eee;border-color:#333}body.dark button,body.dark select,body.dark input,body.dark .field textarea{background:#191919;color:#eee;border-color:#444}body.dark button:hover{background:#292929}body.dark .send{background:#eee;color:#111;border-color:#eee}body.dark .send:hover{background:#ddd}body.dark .message{border-bottom-color:#292929}body.dark .role,body.dark .note,body.dark .status,body.dark .small,body.dark .model-label,body.dark .search-line,body.dark .search-hint,body.dark .welcome{color:#aaa}body.dark .box{border-color:#444}body.dark .md-body blockquote{background:#1b1b1b;color:#ccc;border-left-color:#777}body.dark .md-body code,body.dark .md-body pre{background:#1d1d1d;border-color:#444;color:#eee}body.dark .md-body a{color:#a9c6ff}body.dark .md-body hr{border-top-color:#444}body.dark .md-body th,body.dark .md-body td{border-color:#444}body.dark .md-body th{background:#222}body.dark dialog::backdrop{background:#0009}
+body.dark{background:#111;color:#eee}body.dark header,body.dark .composer,body.dark dialog{background:#111;color:#eee;border-color:#333}body.dark button,body.dark select,body.dark input,body.dark textarea{background:#191919;color:#eee;border-color:#444}body.dark .field textarea{background:#191919;color:#eee;border-color:#444}body.dark button:hover{background:#292929}body.dark .send{background:#eee;color:#111;border-color:#eee}body.dark .send:hover{background:#ddd}body.dark .message{border-bottom-color:#292929}body.dark .role,body.dark .note,body.dark .status,body.dark .small,body.dark .model-label,body.dark .search-line,body.dark .search-hint,body.dark .welcome{color:#aaa}body.dark .box{border-color:#444}body.dark .md-body blockquote{background:#1b1b1b;color:#ccc;border-left-color:#777}body.dark .md-body code,body.dark .md-body pre{background:#1d1d1d;border-color:#444;color:#eee}body.dark .md-body a{color:#a9c6ff}body.dark .md-body hr{border-top-color:#444}body.dark .md-body th,body.dark .md-body td{border-color:#444}body.dark .md-body th{background:#222}body.dark dialog::backdrop{background:#0009}
 </style></head><body>
 <header><span class="brand">Groq AI</span><span class="spacer"></span><div class="model-wrap"><span class="model-label">モデル</span><select id="model" aria-label="モデルを選択"><option value="openai/gpt-oss-120b">GPT-OSS 120B — 高性能</option><option value="openai/gpt-oss-20b">GPT-OSS 20B — 高速</option><option value="qwen/qwen3.8-27b">Qwen 3.8 27B — 画像対応</option></select></div><button id="themeToggle" type="button" aria-label="白黒テーマ切替" title="テーマ切替">白</button><button id="new" type="button">新規</button><button id="openSettings" type="button">設定</button></header>
 <main><div id="messages" aria-live="polite"><div class="welcome">メッセージを入力して始めてください。</div></div>
@@ -70,8 +70,9 @@ function renderMarkdown(parent,source){
  function isRule(line){return /^ {0,3}(?:(?:-\s*){3,}|(?:\*\s*){3,}|(?:_\s*){3,})$/.test(line);}
  function isHeading(line){return /^ {0,3}#{1,6}\s+/.test(line);}
  function isQuote(line){return /^ {0,3}>\s?/.test(line);}
+ function isMathStart(line){return /^\s*(\$\$|\\\[)/.test(line);}
  function isTableStart(at){return at+1<lines.length&&lines[at].includes('|')&&/^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(lines[at+1]);}
- function startsBlock(at){var line=lines[at]||'';return isFence(line)||isHeading(line)||isRule(line)||isQuote(line)||isList(line)||isTableStart(at);}
+ function startsBlock(at){var line=lines[at]||'';return isFence(line)||isMathStart(line)||isHeading(line)||isRule(line)||isQuote(line)||isList(line)||isTableStart(at);}
  while(i<lines.length){
   var line=lines[i];
   if(!line.trim()){i++;continue;}
@@ -86,6 +87,17 @@ function renderMarkdown(parent,source){
    var pre=document.createElement('pre'),codeNode=document.createElement('code');
    if(language)codeNode.dataset.language=language;
    codeNode.textContent=codeLines.join('\n');pre.appendChild(codeNode);parent.appendChild(pre);continue;
+  }
+  var mathOpen=line.match(/^\s*(\$\$|\\\[)/);
+  if(mathOpen){
+   var mathDelimiter=mathOpen[1],mathClose=mathDelimiter==='$'?'$':'\\]',mathLines=[line];
+   var mathClosed=line.slice(mathOpen[0].length).indexOf(mathClose)>=0;
+   i++;
+   while(!mathClosed&&i<lines.length){
+    var mathLine=lines[i++];mathLines.push(mathLine);
+    if(mathLine.indexOf(mathClose)>=0)mathClosed=true;
+   }
+   var mathNode=document.createElement('div');mathNode.className='math-block';mathNode.textContent=mathLines.join('\n');parent.appendChild(mathNode);continue;
   }
   var heading=line.match(/^ {0,3}(#{1,6})\s+(.+?)\s*#*\s*$/);
   if(heading){var h=document.createElement('h'+heading[1].length);appendInline(h,heading[2]);parent.appendChild(h);i++;continue;}
